@@ -1,10 +1,13 @@
-# Todo:
+Todo:
 
 - character movment = gå, hoppe, etc
 - script for å åpne dører
-- skyte på finer -> forsvinner
+- skyte på finder -> forsvinner
 - skyte på objekter -> bytte farge
 - startmeny
-- åpne kister -> pop up med hva du får
+- åpne kister -> pop up med hva du får fra kisten
+- lydeffekter (og musikk?)
 
-- musikk/lyd
+Kommandoer
+
+- opdatere prosjketet: git pull
