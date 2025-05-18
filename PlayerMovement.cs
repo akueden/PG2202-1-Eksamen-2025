@@ -1,68 +1,66 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("Movement Settings")]
-    public float moveSpeed = 5.0f;
-    public float rotationSpeed = 2.0f;
+    // bevegelse
+    public float moveSpeed = 5f;
+    public float rotationSpeed = 720f;
 
-    [Header("Jump Settings")]
-    public float jumpForce = 6.0f;
-    public float groundCheckDistance = 0.2f;
-    public LayerMask groundLayer;
+    // hopping
+    public float jumpHeight = 1.6f;
 
-    private Rigidbody rb;
-    private bool isGrounded;
+    private CharacterController characterController;
+    private float yVelocity;    // nåværende hastighet
+    private const float groundedGravity = -2f;  // holder spilleren til bakken
 
-    void Start()
+    // kjøres med en gang skript-instansen initialiseres
+    void Awake()
     {
-        rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
+        characterController = GetComponent<CharacterController>();
     }
 
     void Update()
     {
-        HandleRotation();
-        HandleJump();
-    }
+        // leser tastaturinput
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
 
-    void FixedUpdate()
-    {
-        HandleMovement();
-        CheckGround();
-    }
+        // beregner bevegelsesretning
+        Vector3 move = new Vector3(horizontal, 0, vertical).normalized;
+        move = transform.TransformDirection(move);
 
-    void HandleMovement()
-    {
-        float moveX = Input.GetAxis("Horizontal");
-        float moveZ = Input.GetAxis("Vertical");
-
-        Vector3 moveDirection = transform.forward * moveZ + transform.right * moveX;
-        rb.velocity = new Vector3(moveDirection.x * moveSpeed,
-                                  rb.velocity.y,
-                                  moveDirection.z * moveSpeed);
-    }
-
-    void HandleRotation()
-    {
-        float mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
-        transform.Rotate(0, mouseX, 0);
-    }
-
-    void HandleJump()
-    {
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        // sjekker om karakteren står på bakken før den kan hoppe
+        if (characterController.isGrounded)
         {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-        }
-    }
+            yVelocity = groundedGravity;
 
-    void CheckGround()
-    {
-        isGrounded = Physics.Raycast(transform.position,
-                                     Vector3.down,
-                                     groundCheckDistance + 0.1f,
-                                     groundLayer);
+            // sjekker om space-knappen blir klikket på
+            if (Input.GetButtonDown("Jump"))
+            {
+                // hastighet for hvor høyt karakteren hopper
+                yVelocity = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
+            }
+        }
+        else
+        {
+            //  hvis spilleren er i lufta vil de falle til bakken
+            yVelocity += Physics.gravity.y * Time.deltaTime;
+        }
+
+        // hastighet
+        Vector3 velocity = move * moveSpeed;
+        velocity.y = yVelocity;
+        cc.Move(velocity * Time.deltaTime);
+
+        if (move.sqrMagnitude > 0.0001f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(move);
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRot,
+                rotationSpeed * Time.deltaTime
+            );
+        }
     }
 }
