@@ -11,56 +11,60 @@ public class PlayerMovement : MonoBehaviour
     public float jumpHeight = 1.6f;
 
     private CharacterController characterController;
-    private float yVelocity;    // nåværende hastighet
-    private const float groundedGravity = -2f;  // holder spilleren til bakken
+    private Rigidbody rb;
+    private float yVelocity;
+    private const float groundedGravity = -2f;
 
-    // kjøres med en gang skript-instansen initialiseres
     void Awake()
     {
         characterController = GetComponent<CharacterController>();
+
+        // sånn at karakteren ikke tipper over
+        rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.freezeRotation = true;
+            rb.isKinematic = true;
+        }
     }
 
     void Update()
     {
-        // leser tastaturinput
+        // tastaturinput
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
-        // beregner bevegelsesretning
+        // bevegelsesretning i world space
         Vector3 move = new Vector3(horizontal, 0, vertical).normalized;
         move = transform.TransformDirection(move);
 
-        // sjekker om karakteren står på bakken før den kan hoppe
+        // hopping
         if (characterController.isGrounded)
         {
             yVelocity = groundedGravity;
 
-            // sjekker om space-knappen blir klikket på
             if (Input.GetButtonDown("Jump"))
             {
-                // hastighet for hvor høyt karakteren hopper
                 yVelocity = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
             }
         }
         else
         {
-            //  hvis spilleren er i lufta vil de falle til bakken
             yVelocity += Physics.gravity.y * Time.deltaTime;
         }
 
-        // hastighet
+        // bevegelse
         Vector3 velocity = move * moveSpeed;
         velocity.y = yVelocity;
         characterController.Move(velocity * Time.deltaTime);
 
+        // snur figuren mot bevegelsesretningen
         if (move.sqrMagnitude > 0.0001f)
         {
-            Quaternion targetRot = Quaternion.LookRotation(move);
-            transform.rotation = Quaternion.RotateTowards(
-                transform.rotation,
-                targetRot,
-                rotationSpeed * Time.deltaTime
-            );
+            Quaternion targetRot = Quaternion.LookRotation(new Vector3(move.x, 0f, move.z));
+            transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                                                          targetRot,
+                                                          rotationSpeed * Time.deltaTime);
         }
     }
 }
