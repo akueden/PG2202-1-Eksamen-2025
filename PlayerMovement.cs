@@ -51,7 +51,7 @@ public class PlayerMovement : MonoBehaviour
         // hastighet
         Vector3 velocity = move * moveSpeed;
         velocity.y = yVelocity;
-        cc.Move(velocity * Time.deltaTime);
+        characterController.Move(velocity * Time.deltaTime);
 
         if (move.sqrMagnitude > 0.0001f)
         {
